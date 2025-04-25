@@ -1,10 +1,11 @@
 import os, io, tempfile, subprocess
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, send_file, jsonify, redirect, url_for, flash
 import requests
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +27,9 @@ logger.addHandler(file_handler)
 
 load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "password")
+
 if not API_KEY:
     logger.error("Missing OPENAI_API_KEY in .env")
     raise RuntimeError("Missing OPENAI_API_KEY in .env")
@@ -35,13 +39,55 @@ app = Flask(
     static_folder="static",
     template_folder="templates"
 )
+app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
+
+# Login manager configuration
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Simple User class
+class User(UserMixin):
+    def __init__(self, username):
+        self.id = username
+
+@login_manager.user_loader
+def load_user(username):
+    if username == ADMIN_USERNAME:
+        return User(username)
+    return None
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            login_user(User(username))
+            logger.info(f"Successful login for user: {username}")
+            return redirect(url_for('index'))
+        
+        logger.warning(f"Failed login attempt for username: {username}")
+        return render_template('login.html', error="Invalid credentials")
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    logger.info("User logged out")
+    return redirect(url_for('login'))
 
 @app.route("/")
+@login_required
 def index():
     logger.info("Serving index page")
     return render_template("index.html")
 
 @app.route("/api/tts", methods=["POST"])
+@login_required
 def tts():
     data = request.get_json() or {}
     text = data.get("text", "").strip()
