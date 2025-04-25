@@ -1,0 +1,40 @@
+/* static/css/style.css */
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+  min-height: 100vh;
+}
+
+.card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.form-range::-webkit-slider-thumb {
+  background: #0d6efd;
+}
+
+audio {
+  border-radius: 8px;
+  width: 100%;
+}
+
+audio::-webkit-media-controls-panel {
+  background: #f8f9fa;
+}
+
+.badge {
+  font-weight: normal;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+}
