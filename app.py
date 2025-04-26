@@ -113,7 +113,8 @@ def tts():
             headers={
                 "Authorization": f"Bearer {API_KEY}",
                 "Content-Type": "application/json"
-            }
+            },
+            timeout=300
         )
         if not resp.ok:
             logger.error(f"OpenAI API error: {resp.status_code} - {resp.text}")
